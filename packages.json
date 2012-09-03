@@ -1,0 +1,18 @@
+{
+	"packages": [
+		{
+			"name": "GTasks",
+			"description": "Quick to view and manage Your Google Tasks in Sublime Text",
+			"author": "jpswelch",
+			"homepage": "https://github.com/jpswelch/gtasks",
+			"platforms": {
+				"osx": [
+					{
+						"version": "0.1",
+						"url": "https://nodeload.github.com/jpswelch/gtasks/zipball/your_tag_name_here"
+					}
+				]
+			}
+		}
+	]
+}
