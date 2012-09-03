@@ -11,7 +11,7 @@ Sublime Text 2 Plugin to view and manage your Google Tasks.
 
 * [Sublime Text 2](http://sublimetext.com)
 * [Google API Client Library for Python](https://developers.google.com/api-client-library/python/start/installation)
-* [Google API Console Access](https://code.google.com/apis/console#:access)
+* Registered Client ID within [Google API Console Access](https://code.google.com/apis/console#:access)
 
 ## Installation:
 
