@@ -1,6 +1,3 @@
 *.pyc
-*.cache
 *.sublime-project
-*.txt
-gtasks.dat
-package-metadata.json
+google-tasks.dat
