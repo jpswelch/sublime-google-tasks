@@ -1,4 +1,0 @@
-[
-    { "caption": "Google Tasks: View Task Lists", "command": "google_view_tasks" },
-    { "caption": "Google Tasks: Add Task List", "command": "google_add_task_list_from_input" }
-]

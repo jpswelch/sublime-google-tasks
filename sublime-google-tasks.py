@@ -7,56 +7,66 @@ from oauth2client.tools import run
 
 gservice=None
 
+gtasklistlist=None
+gtasklistitem=None
+gtaskitem=None
+
+settings = sublime.load_settings("sublime-google-tasks.sublime-settings")
+
+
 class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 
-	tasklists=None
-	tasks=None
 	selectedtasklistidx=None
 
 	def get_auth(self):
 
 		global gservice
-		print 'GTasks: authenticating'
-		# FLAGS = gflags.FLAGS
-		FLOW = OAuth2WebServerFlow(
-			client_id='630916051171.apps.googleusercontent.com',
-			client_secret='Os8EcU7k7DZlFFHfXCxXIKaJ',
-			scope='https://www.googleapis.com/auth/tasks',
-			user_agent='Sublime Google Tasks/0.0.1')
-		
-		# FLAGS.auth_local_webserver = False
+		client_id = settings.get("client_id")
+		client_secret = settings.get("client_secret")
+		user_agent = settings.get("user_agent")
 
-		storage = Storage('gtasks.dat')
+		FLOW = OAuth2WebServerFlow(
+			client_id=client_id,
+			client_secret=client_secret,
+			scope='https://www.googleapis.com/auth/tasks',
+			user_agent=user_agent)
+		storage = Storage('google-tasks.dat')
 		credentials = storage.get()
 		if credentials is None or credentials.invalid == True:
 			credentials = run(FLOW, storage)
 
 		http = httplib2.Http()
 		http = credentials.authorize(http)
-		gservice = build(serviceName='tasks', version='v1', http=http)		
+		gservice = build(serviceName='tasks', version='v1', http=http)
 		return	
 
 
-	def run(self):
+	def run(self, reset=False):
 
 		global gservice
+		global gtasklistlist
 
 		#auth once
 		if gservice==None:
 			self.get_auth()
 
-		#show latest tasklist 	
+		
+		if reset==True:
+			self.selectedtasklistidx=None
+
+		#show latest tasklist	
 		if self.selectedtasklistidx:		
 			self.get_tasks(self.selectedtasklistidx)
 			return
 
-		self.tasklists = gservice.tasklists().list(fields='items(id,title)').execute()
+		# self.tasklists = gservice.tasklists().list(fields='items(id,title)').execute()
+		gtasklistlist = gservice.tasklists().list(fields='items(id,title)').execute()
 
 		self.tli = []
-		self.tli.append(['Add a New Task List'])
+		self.tli.append([u'\u271A'+' Add a New TaskList'])
 
 		try:
-			for tasklist in self.tasklists['items']:
+			for tasklist in gtasklistlist['items']:
 				self.tli.append(['  '+tasklist['title']])
 		except:
 			pass
@@ -67,25 +77,26 @@ class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 	def get_tasks(self, idx):
 
 		global gservice
+		global gtasklistlist
 
 		if idx==-1:
 			return
 
 		if idx==0:
-			window = sublime.active_window()
-			window.run_command('google_add_task_list_from_input')
+			self.window.run_command('google_add_tasklist_from_input')
 			return
 
 		self.selectedtasklistidx = idx	
 
 		self.tasklistitemindex = idx	
-		self.tasklistitem = self.tasklists['items'][idx-1]['id']
+		self.tasklistitem = gtasklistlist['items'][idx-1]['id']
 
 		self.ti=[]
 		self.ti.append(self.tli[idx][0])
-		self.ti.append([u'\u21b5'+' View Task List'])
-		self.ti.append([u'\u2715'+' Delete Task List'])
-		self.ti.append([u'\u25FB'+' Clear Task List'])
+		self.ti.append([u'\u21b5'+' Back to TaskLists'])
+		self.ti.append([u'\u2715'+' Edit TaskList'])
+		self.ti.append([u'\u2715'+' Delete TaskList'])
+		self.ti.append([u'\u25FB'+' Clear TaskList'])
 		self.ti.append([u'\u271A'+' Add a Task'])
 		
 		self.tasks = gservice.tasks().list(tasklist=self.tasklistitem, fields='items(completed,id,status,title)').execute()
@@ -103,31 +114,37 @@ class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 
 	def get_mod_task_options(self, idx):
 
+		global gtasklistitem
+		global gtasklistlist
+
 		if (idx==-1 or idx==0):
 			return
 
+		gtasklistitem = gtasklistlist['items'][self.selectedtasklistidx-1]
+			
 		if idx==1:
 			self.window.show_quick_panel(self.tli, self.get_tasks)
 			return
 
 		if idx==2:
-			confirmlist = []
-			confirmlist.append(['Yes','Yes - Delete TaskList'])
-			confirmlist.append(['No','No - Oops, don\'t Delete TaskList'])
-			self.window.show_quick_panel(confirmlist, self.del_tasklist_confirm)
+			self.window.run_command('google_edit_tasklist_from_input')
 			return
 
 		if idx==3:
+			confirmlist = [['Yes','Yes - Delete TaskList'],['No','No - Oops, don\'t Delete TaskList']]
+			self.window.show_quick_panel(confirmlist, self.del_tasklist_confirm)
+			return
+
+		if idx==4:
 			gservice.tasks().clear(tasklist=self.tasklistitem).execute()
 			self.window.show_quick_panel(self.tli, self.get_tasks)
 			return
 
-		if idx==4:
-			window = sublime.active_window()
-			window.run_command('google_add_task_from_input', {"tasklistitem": self.tasklistitem})
-			return	
+		if idx==5:
+			self.window.run_command('google_add_task_from_input', {"tasklistitem": self.tasklistitem})
+			return
 
-		self.taskitem = self.tasks['items'][idx-5]['id']
+		self.taskitem = self.tasks['items'][idx-6]['id']
 		self.task = gservice.tasks().get(tasklist=self.tasklistitem, task=self.taskitem).execute()
 		self.tasktitle = self.task['title']
 
@@ -145,8 +162,7 @@ class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 		if idx==0:
 			gservice.tasklists().delete(tasklist=self.tasklistitem).execute()
 			self.selectedtasklistidx=None
-			window = sublime.active_window()
-			window.run_command('google_view_tasks')
+			self.window.run_command('google_view_tasks')
 			return
 		if idx==1:
 			self.window.show_quick_panel(self.tli, self.get_tasks, sublime.MONOSPACE_FONT)			
@@ -174,8 +190,7 @@ class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 
 		# Edit Task
 		if idx==3:
-			window = sublime.active_window()
-			window.run_command('google_edit_task_from_input', {"tasklistitem": self.tasklistitem, "task": self.task})
+			self.window.run_command('google_edit_task_from_input', {"tasklistitem": self.tasklistitem, "task": self.task})
 		
 		# Delete Task
 		if idx==4:
@@ -184,20 +199,20 @@ class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 
 
 
-class GoogleAddTaskListFromInputCommand(sublime_plugin.WindowCommand):
+class GoogleAddTasklistFromInputCommand(sublime_plugin.WindowCommand):
 	
 	global gservice
 
 	def run(self):
 		self.tasklist = {'title': ''}
-		self.window.show_input_panel('Add a New Task List Title:', self.tasklist['title'], self.on_done, self.on_change, self.on_cancel)
+		self.window.show_input_panel('Add a New TaskList Title:', self.tasklist['title'], self.on_done, self.on_change, self.on_cancel)
 
 	def on_done(self, input):
 		if input!='':
 			self.tasklist['title'] = input
-			result = gservice.tasklists().insert(body=self.tasklist).execute()
-		window = sublime.active_window()
-		window.run_command('google_view_tasks')
+			gservice.tasklists().insert(body=self.tasklist).execute()
+
+		self.window.run_command('google_view_tasks')
 	
 
 	def on_change(self, input):
@@ -220,14 +235,13 @@ class GoogleEditTaskFromInputCommand(sublime_plugin.WindowCommand):
 		if input!='':
 			self.task['title'] = input
 			gservice.tasks().update(tasklist=self.tasklistitem, task=self.task['id'], body=self.task).execute()
-			window = sublime.active_window()
-			window.run_command('google_view_tasks')
+			self.window.run_command('google_view_tasks')
 
 	def on_change(self, input):
 		pass
 
 	def on_cancel(self):
-		pass	
+		pass
 
 
 class GoogleAddTaskFromInputCommand(sublime_plugin.WindowCommand):
@@ -243,8 +257,7 @@ class GoogleAddTaskFromInputCommand(sublime_plugin.WindowCommand):
 		if input!='':
 			self.task['title'] = input
 			gservice.tasks().insert(tasklist=self.tasklistitem, body=self.task).execute()
-			window = sublime.active_window()
-			window.run_command('google_view_tasks')
+			self.window.run_command('google_view_tasks')
 
 	def on_change(self, input):
 		pass
@@ -253,24 +266,25 @@ class GoogleAddTaskFromInputCommand(sublime_plugin.WindowCommand):
 		pass	
 
 
-# class GoogleEditTaskListFromInputCommand(sublime_plugin.WindowCommand):
+class GoogleEditTasklistFromInputCommand(sublime_plugin.WindowCommand):
 	
-	# global gservice
+	def run(self):
+		global gtasklistitem
+		self.window.show_input_panel('Edit TaskList Title:', gtasklistitem['title'], self.on_done, self.on_change, self.on_cancel)
 
-	# def run(self):
-	# 	self.tasklist = {'title': ''}
-	# 	self.window.show_input_panel('Edit Task List Title:', self.tasklist['title'], self.on_done, self.on_change, self.on_cancel)
+	def on_done(self, input):
+		global gservice
+		global gtasklistitem
+		global gtasklistlist
 
-	# def on_done(self, input):
-	# 	if input!='':
-	# 		self.tasklist['title'] = input
-	# 		result = service.tasklists().update(tasklist=self.tasklist['id'], body=tasklist).execute()
-	# 	window = sublime.active_window()
-	# 	window.run_command('google_view_tasks')
-	
+		if input!='':
+			gtasklistitem['title'] = input
+			gservice.tasklists().update(tasklist=gtasklistitem['id'], body=gtasklistitem).execute()
+			gtasklistlist = gservice.tasklists().list(fields='items(id,title)').execute()			
+			self.window.run_command('google_view_tasks', {"reset":True})
 
-	# def on_change(self, input):
-	# 	pass
+	def on_change(self, input):
+		pass
 
-	# def on_cancel(self):
-	# 	pass	
+	def on_cancel(self):
+		pass
