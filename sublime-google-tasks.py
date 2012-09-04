@@ -55,7 +55,7 @@ class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 			self.selectedtasklistidx=None
 
 		#show latest tasklist	
-		if self.selectedtasklistidx:		
+		if self.selectedtasklistidx:
 			self.get_tasks(self.selectedtasklistidx)
 			return
 
@@ -210,10 +210,8 @@ class GoogleAddTasklistFromInputCommand(sublime_plugin.WindowCommand):
 	def on_done(self, input):
 		if input!='':
 			self.tasklist['title'] = input
-			gservice.tasklists().insert(body=self.tasklist).execute()
-
-		self.window.run_command('google_view_tasks')
-	
+			result = gservice.tasklists().insert(body=self.tasklist).execute()
+		self.window.run_command('google_view_tasks', {"reset":True})
 
 	def on_change(self, input):
 		pass
@@ -280,7 +278,7 @@ class GoogleEditTasklistFromInputCommand(sublime_plugin.WindowCommand):
 		if input!='':
 			gtasklistitem['title'] = input
 			gservice.tasklists().update(tasklist=gtasklistitem['id'], body=gtasklistitem).execute()
-			gtasklistlist = gservice.tasklists().list(fields='items(id,title)').execute()			
+			gtasklistlist = gservice.tasklists().list(fields='items(id,title)').execute()
 			self.window.run_command('google_view_tasks', {"reset":True})
 
 	def on_change(self, input):
