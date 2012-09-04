@@ -1,7 +1,7 @@
 {
 	"packages": [
 		{
-			"name": "sublime-google-tasks",
+			"name": "Google Tasks",
 			"description": "Google Tasks Package for Sublime Text 2",
 			"author": "jpswelch",
 			"homepage": "https://github.com/jpswelch/sublime-google-tasks",
