@@ -8,7 +8,6 @@
 			"platforms": {
 				"osx": [
 					{
-						"version": "0.0.1",
 						"url": "https://nodeload.github.com/jpswelch/sublime-google-tasks/zipball/master"
 					}
 				]
