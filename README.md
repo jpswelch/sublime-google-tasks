@@ -38,11 +38,6 @@ Under User Preferences for Google Tasks enter your client\_id, client\_secret an
 ## Usage:
 
 ```
-Cmd + Shift + P
-```
-Select "Google Tasks: View Tasks"
-
-```
 Cmd + Shift + T
 ```
 
