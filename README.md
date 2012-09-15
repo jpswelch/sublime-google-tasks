@@ -24,10 +24,9 @@ Register a client id and client secret on [Google API Console](https://code.goog
 * Select "Installed Application" as your application type 
 * Set your redirect URL to "http://localhost"
 
-
-<!-- 
 ### Install "Sublime Google Tasks" Package
 
+<!-- 
 **Sublime Package Control**
 
 Sublime Google Tasks is discoverable and installable in [Sublime Package Control](http://wbond.net/sublime_packages/package_control).  

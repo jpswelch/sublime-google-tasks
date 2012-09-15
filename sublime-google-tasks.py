@@ -202,7 +202,6 @@ class GoogleViewTasksCommand(sublime_plugin.WindowCommand):
 
 class GoogleAddTasklistFromInputCommand(sublime_plugin.WindowCommand):
 	
-	# global gservice
 	global gtasklist
 	
 	def run(self):
@@ -219,7 +218,6 @@ class GoogleAddTasklistFromInputCommand(sublime_plugin.WindowCommand):
 
 class GoogleEditTasklistFromInputCommand(sublime_plugin.WindowCommand):
 
-	# global gservice
 	global gtasklist
 	
 	def run(self):
@@ -235,10 +233,8 @@ class GoogleEditTasklistFromInputCommand(sublime_plugin.WindowCommand):
 		
 class GoogleAddTaskFromInputCommand(sublime_plugin.WindowCommand):
 
-	# global gservice
 	global gtasklist
 	
-	# def run(self, tasklistitem=None):
 	def run(self):
 		self.task = {'title' : ''}
 		self.window.show_input_panel('Add a Task:', '', self.on_done, None, None)
@@ -253,7 +249,6 @@ class GoogleAddTaskFromInputCommand(sublime_plugin.WindowCommand):
 
 class GoogleEditTaskFromInputCommand(sublime_plugin.WindowCommand):
 	
-	# global gservice
 	global gtask
 
 	def run(self):
